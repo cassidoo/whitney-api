@@ -6,7 +6,6 @@ import sys
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from argparse import ArgumentParser
 
-
 parser = ArgumentParser(description='Process the desired port.')
 parser.add_argument("-p", "--port", dest="port", help="Port to listen on", metavar="PORT")
 
@@ -24,7 +23,8 @@ except IOError:
     sys.exit()
 
 class WhitneyAPIServer(BaseHTTPRequestHandler):
-  def GET(self):
+
+  def do_GET(self): #GET it back. Whitney joke. HA! I crack myself up.
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
@@ -48,10 +48,12 @@ class WhitneyAPIServer(BaseHTTPRequestHandler):
         return
 
 try:
-    server = HTTPServer(('', port), InstantAPIServer)
-    print 'Starting instant API server on port %s...' % (port)
+    server = HTTPServer(('', port), WhitneyAPIServer)
+    print 'Starting Whitney API server on port %s...' % (port)
     server.serve_forever()
 
 except KeyboardInterrupt:
-    print 'Stopping instant API server...'
+    print 'Stopping Whitney API server...'
     server.socket.close()
+
+
