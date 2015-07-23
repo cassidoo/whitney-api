@@ -24,7 +24,7 @@ except IOError:
 
 class WhitneyAPIServer(BaseHTTPRequestHandler):
 
-  def do_GET(self): #GET it back. Whitney joke. HA! I crack myself up.
+    def do_GET(self):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
@@ -32,20 +32,32 @@ class WhitneyAPIServer(BaseHTTPRequestHandler):
         path = self.path[1:]
         components = string.split(path, '/')
 
-        node = content
-        for component in components:
-            if len(component) == 0 or component == "favicon.ico":
-                continue
-
-            if type(node) == dict:
-                node = node[component]
-
-            elif type(node) == list:
-                node = node[int(component)]
+        node = parse_node(content, components)
 
         self.wfile.write(json.dumps(node))
 
         return
+
+# Thanks to Stack Overflow user Steven Moseley for the help on this function!
+def parse_node(node, components):
+    # For a valid node and component list:
+    if node and len(components) and components[0] != "favicon.ico":
+        # Dicts will return parse_node of the top-level node component found,
+        # reducing the list by 1
+        if type(node) == dict:
+            return parse_node(node.get(components[0], None), components[1:])
+
+        elif type(node) == list:
+            # A list with an "all" argument will return a full list of sub-nodes matching the rest of the URL criteria
+            if components[0] == "all":
+                return [parse_node(n, components[1:]) for n in node]
+            # A normal list node request will work as it did previously
+            else:
+                return parse_node(node[int(components[0])], components[1:])
+    else:
+        return node
+
+    return None
 
 try:
     server = HTTPServer(('', port), WhitneyAPIServer)
@@ -55,5 +67,3 @@ try:
 except KeyboardInterrupt:
     print 'Stopping Whitney API server...'
     server.socket.close()
-
-
